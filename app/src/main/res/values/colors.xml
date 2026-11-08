@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ZeroLinux 设计令牌 -->
+    <color name="bg">#0B0C0F</color>
+    <!-- 自适应图标背景层 -->
+    <color name="ic_launcher_background">#0B0C0F</color>
+    <color name="surface">#111318</color>
+    <color name="surface_alt">#171A21</color>
+    <color name="border">#262B33</color>
+    <color name="fg">#E6E8EB</color>
+    <color name="fg_muted">#8B949E</color>
+    <color name="accent">#7EE787</color>
+    <color name="accent_dim">#2EA043</color>
+    <color name="selection">#264F78</color>
+    <color name="status_pending">#A371F7</color>
+    <color name="status_pinned">#58A6FF</color>
+    <color name="status_running">#3FB950</color>
+    <color name="status_unread">#F0883E</color>
+    <color name="danger">#F85149</color>
+</resources>

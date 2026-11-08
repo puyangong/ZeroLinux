@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <application
+        android:name=".ZeroLinuxApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.ZeroLinux">
+
+        <!-- ============ 启动器 / 引导 / 容器管理 / 设置 ============ -->
+        <activity
+            android:name=".ui.main.LaunchActivity"
+            android:exported="true"
+            android:theme="@style/Theme.ZeroLinux.Launch">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.main.WizardActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".ui.main.SettingsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".ui.container.ContainerListActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".ui.container.NewContainerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".ui.container.ContainerSettingsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+        <!-- ============ 主终端 / 会话 / 文件抽屉（:terminal 进程） ============ -->
+        <activity
+            android:name=".ui.terminal.TerminalActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":terminal"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
+
+        <service
+            android:name=".service.TerminalHostService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":terminal"
+            android:stopWithTask="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="ZeroLinux container terminal session" />
+        </service>
+
+        <!-- ============ 容器元数据服务（同进程，保留 AIDL 兼容） ============ -->
+        <service
+            android:name=".service.ContainerTaskService"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="ZeroLinux rootfs download and container software installation" />
+        </service>
+
+        <service
+            android:name=".ipc.ContainerService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.zerolinux.app.IContainerService" />
+            </intent-filter>
+        </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!--
+            SAF 文件共享：把 files/containers/<uuid>/rootfs 通过系统 DocumentsUI
+            暴露给第三方文件管理器。
+            MANAGE_DOCUMENTS 是 signature 级权限，只有系统能直接 binder 调用，
+            第三方 App 只能拿到系统代理后的 URI —— 这正是 DocumentsProvider 的
+            标准写法（AOSP / Termux 同样如此）。
+        -->
+        <provider
+            android:name=".providers.DocumentsProvider"
+            android:authorities="${applicationId}.documents"
+            android:enabled="true"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.action.DOCUMENTS_PROVIDER"
+                android:value="true" />
+            <meta-data
+                android:name="com.zerolinux.app.DOCUMENTS_ROOTS"
+                android:resource="@xml/documents_provider" />
+        </provider>
+        <!-- ============ AI（:ai 进程） ============ -->
+        <service
+            android:name=".service.OpenCodeServerService"
+            android:exported="false"
+            android:process=":ai"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="opencode-server" />
+        </service>
+
+        <!--
+            短命令服务：终端/主进程通过它触发 watcher、清理 AAR 服务器条目，
+            避免在 :terminal 里加载 AAR，也避免为一次清理启动前台通知。
+        -->
+        <service
+            android:name=".ai.AiCommandService"
+            android:exported="false"
+            android:process=":ai" />
+
+        <!--
+            透明跳板：终端进程只负责 startActivity，真正的 AI 编排
+            （proot serve、隐藏 WebView seed）都在 :ai 进程完成。
+        -->
+        <activity
+            android:name=".ai.AiLaunchActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:process=":ai"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <receiver
+            android:name=".service.OpenCodeBootReceiver"
+            android:exported="false"
+            android:process=":ai">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.USER_UNLOCKED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            AAR 自带组件统一放 :ai。这里只补 process，其余属性由 manifest
+            merger 与库 manifest 合并（exported/launchMode/theme/FGS 类型等）。
+        -->
+        <activity
+            android:name="com.opencode.mobile.MainActivity"
+            android:process=":ai"
+            tools:node="merge" />
+
+        <service
+            android:name="com.opencode.mobile.WatchService"
+            android:process=":ai"
+            tools:node="merge" />
+
+        <receiver
+            android:name="com.opencode.mobile.BootReceiver"
+            android:process=":ai"
+            tools:node="merge" />
+
+    </application>
+
+</manifest>

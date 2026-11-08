@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    镜像下载与终端里的 HTTPS 需要同时兼容：
+    - 系统预装 CA（新老 Android 差异很大）
+    - 用户自己安装的自签 CA（代理/自建镜像站）
+    - 部分国内镜像的 HTTP 回退
+
+    证书内容仍由 SHA256SUMS 校验；这里只放宽 TLS 信任来源，
+    不关闭主机名校验。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

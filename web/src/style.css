@@ -1,0 +1,287 @@
+/**
+ * 终端页样式。手柄尺寸：44px 方形命中区、26px 圆点。
+ * 插入光标用 xterm 原生 bar 光标，
+ * 选区高亮 / 手柄由 selection.ts 自绘（不再有自定义竖条）。
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--zl-bg, #0b0c0f);
+  color: var(--zl-fg, #e6e8eb);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+}
+
+.term-host {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.term-surface {
+  position: absolute;
+  /* 左缘 = 屏宽 8%（1080 宽 → 86px），右缘 2px。横向留白交给 inset，
+     不再用 padding / xterm width+margin（双倍扣减会错位）。
+     FitAddon 测的是本元素 content 宽，所以列数会少约 10–11 列，属预期代价。 */
+  inset: 0 2px 0 8%;
+  /* 竖向留白保留 */
+  padding: 8px 0 4px 0;
+  box-sizing: border-box;
+}
+
+/* xterm 自带容器需要撑满，否则 FitAddon 测到的是 0 */
+.term-surface .xterm {
+  height: 100%;
+  width: 100%;
+}
+
+.term-surface .xterm-viewport {
+  background: transparent !important;
+  scrollbar-width: none;
+}
+
+.term-surface .xterm-viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.empty {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.empty-title {
+  font: 600 15px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--zl-fg, #e6e8eb);
+}
+
+.empty-desc {
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #8b949e;
+}
+
+/* ---- 选区层 -------------------------------------------------------------- */
+
+/* 选区层是终端页的最上层：光标、圆点、复制/粘贴菜单都必须压在底部键栏
+   （.zl-keybar，z-index 20）之上，否则键栏一展开就会把手柄和菜单切掉。
+   层本身 pointer-events:none，只有手柄命中盒与菜单按钮能接手势。
+   overflow 保持 visible：圆点允许越出终端文字区显示，不能被这层裁掉。 */
+.zl-sel-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  overflow: visible;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.zl-sel-orb {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 61;
+}
+
+.zl-sel-rect {
+  position: absolute;
+  /* 半透明蓝选区，无强调色描边 */
+  background: var(--zl-selection, rgba(182, 215, 255, 0.53));
+  border-radius: 2px;
+}
+
+/* 本地终端也压掉 WebView 原生文本选择/长按菜单，只保留自绘选区 */
+.xterm,
+.xterm * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.zl-sel-handle {
+  position: absolute;
+  /* 命中盒固定 112px（半径 56px），视觉圆点缩小后仍保持拇指热区。 */
+  width: 112px;
+  height: 112px;
+  transform: translate(-50%, -50%);
+  z-index: 63;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.zl-sel-handle-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #58a6ff;
+  border: 2px solid var(--zl-bg, #0b0c0f);
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(121, 192, 255, 0.18);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 选中后盖住 xterm，避免它的手势把选区弄丢 */
+/* 命中开关只由 render()/hide() 切：默认 pointer-events:none，
+   没有选区时这一层绝不能挡住落在终端上的点击（否则点不出输入法）。 */
+.zl-sel-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 62;
+  touch-action: none;
+  pointer-events: none;
+  display: none;
+}
+
+.zl-sel-shield.on {
+  display: block;
+}
+
+.zl-sel-copy,
+.zl-sel-paste {
+  position: absolute;
+  /* 菜单是整页最上层元素：键栏展开、选区贴底时也不能被压住。 */
+  z-index: 64;
+  height: 32px;
+  padding: 0 14px;
+  display: none;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid #2b3138;
+  background: #171a21;
+  color: #e6e8eb;
+  font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: auto;
+}
+
+.zl-sel-copy.on,
+.zl-sel-paste.on {
+  display: flex;
+}
+
+/* 亮色主题下把选中按钮反过来 */
+:root[data-theme='light'] .zl-sel-copy,
+:root[data-theme='light'] .zl-sel-paste {
+  border-color: #d0d7de;
+  background: #ffffff;
+  color: #1f2328;
+}
+
+/* ---- 底部快捷按键栏 ------------------------------------------------------- */
+
+:root {
+  /* 快捷栏总高：两行键帽 + 行距 + 上下内边距，尺寸口径见下方 .zl-keybar。 */
+  --zl-kb-h: 126px;
+}
+
+/* 按键栏展开时把终端可用高度让出来：只改 .term-surface 的 bottom，
+   由 main.ts 触发一次 fit()，不直接动 term.resize。 */
+.term-host.zl-keybar-open .term-surface {
+  bottom: var(--zl-kb-h, 126px);
+}
+
+.zl-keybar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--zl-kb-h, 126px);
+  box-sizing: border-box;
+  padding: 8px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--zl-keybar-bg, #12151b);
+  border-top: 1px solid var(--zl-keybar-border, #2b3138);
+  /* 键栏常驻底部；选区层（z-index 60）在其之上，圆点与复制菜单始终可见。
+     键栏与选区的手势冲突由 document 捕获阶段的 onPointerDown 分流：
+     落在键栏上的按下只走按键，不清选区、不抢焦点。 */
+  z-index: 20;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.zl-kb-row {
+  display: flex;
+  flex: 1 1 0;
+  gap: 8px;
+  min-height: 0;
+}
+
+.zl-kb-key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #2a3038; /* 修饰键：深灰 */
+  color: #d6dde6;
+  font: 600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: none;
+  transition: background 0.08s ease, border-color 0.08s ease;
+}
+
+.zl-kb-act {
+  background: #33455b; /* 动作键：蓝灰 */
+  color: #e6e8eb;
+}
+
+.zl-kb-key.on {
+  background: #3d6da8;
+  border-color: #6ea8fe;
+  color: #ffffff;
+}
+
+.zl-kb-key.down {
+  filter: brightness(1.35);
+}
+
+:root[data-theme='light'] .zl-keybar {
+  background: #eef1f5;
+  border-top-color: #d0d7de;
+}
+
+:root[data-theme='light'] .zl-kb-key {
+  background: #dfe4ea;
+  color: #1f2328;
+}
+
+:root[data-theme='light'] .zl-kb-act {
+  background: #c3d2e4;
+  color: #1f2328;
+}
+
+:root[data-theme='light'] .zl-kb-key.on {
+  background: #7aa7e0;
+  color: #0b0c0f;
+}

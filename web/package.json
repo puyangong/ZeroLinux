@@ -1,0 +1,17 @@
+{
+  "name": "zerolinux-terminal",
+  "private": true,
+  "version": "0.2.3",
+  "type": "module",
+  "description": "ZeroLinux xterm.js 终端页。",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

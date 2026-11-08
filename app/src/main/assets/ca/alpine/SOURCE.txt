@@ -1,0 +1,4 @@
+package: ca-certificates
+version: 20261020-r0
+source: https://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/ca-certificates-20261020-r0.apk
+certs: 118

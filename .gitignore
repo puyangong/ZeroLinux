@@ -1,0 +1,84 @@
+# ============================================================
+# ZeroLinux 模块 .gitignore
+# 只保留源码、构建脚本、依赖声明、native 源码、CA 证书与打包后的前端资源。
+#
+# 本文件与根目录 .gitignore 中针对 ZeroLinux/ 的规则一一对应；
+# 即使把 ZeroLinux 单独拆成仓库，也能得到同样的忽略效果。
+# ============================================================
+
+# ---------- 构建输出 ----------
+# 对应根目录：ZeroLinux/.gradle/、ZeroLinux/build/、ZeroLinux/app/build/、ZeroLinux/.cxx/
+build/
+app/build/
+app/release/
+.gradle/
+.kotlin/
+.cxx/
+app/.cxx/
+captures/
+lint-results*.html
+lint-results*.xml
+*.hprof
+hs_err_pid*
+
+# ---------- 本机配置与签名材料（绝不入库） ----------
+# 对应根目录：ZeroLinux/local.properties、ZeroLinux/key.properties、ZeroLinux/release.keystore
+local.properties
+key.properties
+*.jks
+*.keystore
+release.keystore
+
+# ---------- IDE / 系统杂项 ----------
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---------- 前端依赖与中间产物 ----------
+# web/src 是源码；web/dist 由 build.mjs 生成；
+# app/src/main/assets/www 是 sync-web.ps1 的产物，但必须入库，
+# 否则没有 Node 环境的机器无法直接 assembleRelease。
+# 对应根目录：ZeroLinux/web/node_modules/、ZeroLinux/web/dist/
+web/node_modules/
+web/dist/
+web/.cache/
+node_modules/
+
+# ---------- 调试 / 截图 / 临时产物 ----------
+# 对应根目录的全局规则：._cache_*、.shots/、*.png、*.bak、/_flicker、/_keytest
+._cache_*
+artifacts/
+.shots/
+_flicker/
+_keytest/
+*.png
+*.log
+*.bak
+*.tmp
+*.orig
+*.rej
+/_*
+
+# ---------- 与根目录规则的对齐说明 ----------
+# 根目录的 /scripts、/doc、/LinuxOnAndroid-main、/ZeroTermux-main 都是根级目录：
+#   /scripts   -> ZeroLinux/scripts 是 native/前端构建脚本，默认保留；
+#                 如果希望与根目录一致也排除，取消下一行注释。
+#   /doc       -> ZeroLinux/docs 是空目录，不忽略。
+#   /LinuxOnAndroid-main、/ZeroTermux-main 在 ZeroLinux 下不存在。
+# scripts/
+
+# ---------- 归档文件 ----------
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+/*.apk
+/*.aab
+
+# ---------- 计划与进度草稿（本机工作记录，需要时用 git add -f） ----------
+task_plan.md
+findings.md
+progress.md

@@ -1,0 +1,4 @@
+package: ca-certificates
+version: 20260816ubuntu0.26.04.2
+source: https://archive.ubuntu.com/ubuntu/pool/main/c/ca-certificates/ca-certificates_20260816ubuntu0.26.04.2_all.deb
+certs: 120

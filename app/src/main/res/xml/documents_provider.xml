@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SAF 静态根目录声明（仅描述性：manifest 的
+    <meta-data android:name="android.content.APP_ROOT"> 只是给不覆写
+    queryRoots() 的 provider 用的默认实现。本 provider **覆写**了
+    queryRoots()，运行时以 DocumentsProvider.kt 的 queryRoots() 为准。
+
+    运行时结构（Android 允许动态 root）：
+      rootId = "container:<uuid>"   documentId = "container:<uuid>/"   -> AppPaths.containerRootfs(ctx, uuid)
+      rootId = "sd"                 documentId = "sd:/"                -> /storage/emulated/0
+
+    容器 root 全部由 queryRoots() 动态返回（读 ContainerRepo），因此新增/删除
+    容器不需要改这里的 xml；容器集合变化时 provider 会
+    notifyChange(buildRootsUri(...))，系统会自己重拉 root 列表。
+
+    这里只保留 SD 卡这一条，保证万一某些 ROM 走了默认实现也不会凭空冒出
+    一个「容器」假 root（那会指向 files/containers 而不是单个容器的 rootfs，
+    与「每个容器一个卷」的语义冲突）。
+-->
+<roots xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <root
+        android:name="Internal storage"
+        android:summary="用户可见的内部存储"
+        android:path="/storage/emulated/0" />
+
+</roots>

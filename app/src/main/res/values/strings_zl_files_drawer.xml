@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件侧栏：容器根目录 / 长按删除快捷方式。
+     本文件属于默认（英文）资源目录；中文译文在 values-zh-rCN/strings.xml。
+     新增 key 时必须同时补到 values-zh-rCN/strings.xml，保持两套语言 key 集一致。 -->
+<resources>
+    <string name="zl_files_container_root">Container root</string>
+    <string name="zl_files_default_undeletable">Built-in shortcuts cannot be deleted</string>
+    <string name="zl_files_shortcut_delete_title">Delete shortcut</string>
+    <string name="zl_files_shortcut_delete_confirm">Delete shortcut \"%1$s\"?</string>
+
+    <!-- 「所有文件访问」引导框 -->
+    <string name="zl_files_perm_all_files_title">All files access required</string>
+    <string name="zl_files_perm_all_files_msg">\"All files access\" permission is required to browse sdcard</string>
+    <string name="zl_files_perm_storage_msg">Storage permission is required to browse sdcard</string>
+    <string name="zl_files_perm_all_files_body">Since Android 13 the regular storage permission can no longer read the sdcard root. Enable \"All files access\" for this app in system settings; you will be taken to sdcard automatically after returning.</string>
+    <string name="zl_files_perm_grant">Grant</string>
+</resources>

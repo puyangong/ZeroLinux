@@ -1,0 +1,4 @@
+package: ca-certificates
+version: 20260816+nmu1
+source: https://http.kali.org/kali/pool/main/c/ca-certificates/ca-certificates_20260816+nmu1_all.deb
+certs: 120

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZeroLinux</string>
+    <string name="app_tagline">Linux containers, no root required</string>
+
+    <string name="wizard_skip">Skip</string>
+    <string name="wizard_next">Continue</string>
+    <string name="wizard_back">Back</string>
+    <string name="wizard_done">Enter ZeroLinux</string>
+    <string name="step_of">Step %1$d of %2$d</string>
+
+    <string name="welcome_title">Your Linux, in your pocket</string>
+    <string name="welcome_sub">ZeroLinux runs Ubuntu, Alpine, Kali and Debian side by side, using PRoot. No root, no unlock, no compromise.</string>
+    <string name="welcome_cta">Get started</string>
+
+    <string name="perm_title">Permissions</string>
+    <string name="perm_sub">Three things keep containers alive. You can review them any time in Settings.</string>
+    <string name="perm_storage">Storage</string>
+    <string name="perm_storage_desc">Read and write files shared with your containers.</string>
+    <string name="perm_notification">Notifications</string>
+    <string name="perm_notification_desc">Show a persistent notification while sessions are running.</string>
+    <string name="perm_background">Background running</string>
+    <string name="perm_background_desc">Keep containers alive when the screen is off.</string>
+    <string name="perm_grant">Grant</string>
+    <string name="perm_granted">Granted</string>
+    <string name="perm_not_granted">Not granted</string>
+    <string name="perm_partial">%1$d of %2$d granted</string>
+    <string name="perm_open_settings">Open settings</string>
+
+    <string name="distro_title">Choose a distribution</string>
+    <string name="distro_sub">Create more containers later from the container manager in the top bar.</string>
+    <string name="distro_ubuntu">Ubuntu</string>
+    <string name="distro_ubuntu_desc">Most compatible. 33 MB download</string>
+    <string name="distro_alpine">Alpine</string>
+    <string name="distro_alpine_desc">Tiny and fast. 4 MB download</string>
+    <string name="distro_kali">Kali</string>
+    <string name="distro_kali_desc">Security toolkit. 1.7 GB download</string>
+    <string name="distro_debian">Debian</string>
+    <string name="distro_debian_desc">Rock solid. 34 MB download</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_zh">中文</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_section_permissions">Permissions</string>
+    <string name="settings_section_runtime">Runtime</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_process">Process</string>
+    <string name="settings_abi">ABI</string>
+    <string name="settings_distro">Selected distribution</string>
+    <string name="settings_none">Not selected</string>
+    <string name="settings_proot">PRoot engine</string>
+    <string name="settings_pty">PTY bridge</string>
+    <string name="settings_ok">Ready</string>
+    <string name="settings_fail">Unavailable</string>
+    <string name="settings_restart_wizard">Run onboarding again</string>
+
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_empty">No container yet</string>
+    <string name="terminal_hint">Container runtime arrives in step 2. The native layer is already wired up.</string>
+    <string name="terminal_settings">Settings</string>
+    <string name="terminal_check">Environment check</string>
+    <string name="terminal_prompt">root@zerolinux:~#</string>
+    <string name="terminal_process">Process</string>
+    <string name="terminal_abi">ABI</string>
+    <string name="terminal_libs">Native libraries</string>
+
+
+    <string name="notif_channel">Container sessions</string>
+    <string name="notif_title">ZeroLinux is running</string>
+    <string name="notif_text">Container sessions are active</string>
+    <!-- containers -->
+    <string name="containers_title">Containers</string>
+    <string name="containers_empty_hint">no containers yet</string>
+    <string name="containers_count">%1$d containers · active %2$s</string>
+    <string name="containers_none_active">none</string>
+    <string name="containers_empty_title">No container yet</string>
+    <string name="containers_empty_desc">Pick a distro and ZeroLinux will download a rootfs.</string>
+    <string name="containers_new">New container</string>
+    <string name="containers_data">Backup</string>
+    <string name="containers_restore">Restore from .zlbak</string>
+    <string name="containers_delete_title">Delete container?</string>
+    <string name="containers_delete_desc">%1$s and its rootfs will be removed permanently. Any running install will be canceled.</string>
+    <string name="containers_clone_title">Clone container</string>
+    <string name="containers_clone_desc">Clone %1$s with all its settings.</string>
+    <string name="containers_clone_confirm_title">Confirm clone</string>
+    <string name="containers_clone_confirm_desc">Create a full copy of %1$s as \"%2$s\". The source container will not be changed.</string>
+    <string name="containers_clone_action">Clone</string>
+    <string name="containers_clone_hint">e.g. kali-2</string>
+    <string name="containers_clone_err_invalid">Use 1-40 letters, digits, dot, underscore or dash.</string>
+    <string name="containers_clone_err_taken">That ID is already used by another container.</string>
+    <string name="containers_active">ACTIVE</string>
+    <string name="containers_action_use">Switch to this</string>
+    <string name="containers_action_use_sub">Set as default container</string>
+    <string name="containers_switch_confirm_title">Switch default AI container?</string>
+    <string name="containers_switch_confirm_desc">Set %1$s as the active container? The AI module will use this container\'s own OpenCode server, and the previous container\'s AI background state will not be cleared.</string>
+    <string name="containers_action_open">Details</string>
+    <string name="containers_switched">Default AI container switched to %1$s</string>
+
+    <string name="drawer_guide_title">Two side drawers</string>
+    <string name="drawer_guide_sessions">① Swipe right from the left screen edge → open the session list to create, rename or close sessions.</string>
+    <string name="drawer_guide_files">② Swipe left from the right screen edge → browse the current container directory.</string>
+    <string name="drawer_guide_start">Get started</string>
+    <string name="containers_action_init">Reinstall stack</string>
+    <string name="containers_action_clone">Clone</string>
+
+    <string name="action_open">Open</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="saved">Saved</string>
+    <string name="copied">Copied</string>
+
+    <string name="container_status_not_ready">NO ROOTFS</string>
+    <string name="container_status_deleting">DELETING…</string>
+    <string name="container_status_pending">PENDING</string>
+    <string name="container_status_ready">READY</string>
+
+    <string name="new_container_title">New container</string>
+    <string name="new_container_subtitle">download · mirror · install</string>
+    <string name="new_container_distro">Distribution</string>
+    <string name="new_container_identity">Identity</string>
+    <string name="new_container_note_title">What happens next</string>
+    <string name="new_container_note">The rootfs downloads into the app private storage, then apt/apk is repointed to a mirror and curl, git, python, node, rust, go and other common development tools are installed.</string>
+    <string name="new_container_create">Create and install</string>
+    <string name="new_container_import">Import local rootfs…</string>
+
+    <string name="container_field_id">Container ID</string>
+    <string name="container_field_uuid">UUID</string>
+    <string name="container_field_created">Created</string>
+    <string name="container_field_abi">ABI</string>
+    <string name="container_field_error">Last error</string>
+
+    <string name="err_id_empty">ID cannot be empty</string>
+    <string name="err_id_charset">Use letters, digits, dot, dash or underscore</string>
+    <string name="err_id_taken">This ID is already used</string>
+
+    <string name="container_missing">Container not found</string>
+    <string name="container_section_info">Overview</string>
+    <string name="container_section_identity">Identity</string>
+    <string name="container_section_mirror">Mirror</string>
+    <string name="container_section_actions">Actions</string>
+
+    <string name="container_mirror_custom">Custom mirror URL</string>
+    <string name="container_mirror_custom_hint">e.g. https://mirrors.example.com</string>
+    <string name="container_mirror_apply_hint">Changing the mirror marks the stack for a reinstall.</string>
+    <string name="container_mirror_saved">Mirror saved. Reinstall to apply.</string>
+
+    <string name="mirror_domestic">China</string>
+    <string name="mirror_overseas">Official</string>
+    <string name="mirror_custom">Custom</string>
+
+    <string name="container_lan_url">LAN URL</string>
+    <string name="container_copy_url">Copy URL</string>
+
+    <string name="container_action_rebuild">Reinstall software stack</string>
+    <string name="container_action_init">Install software stack</string>
+    <string name="container_action_backup">Export backup</string>
+    <string name="container_action_restart">Restart container</string>
+    <string name="container_restart_title">Restart container?</string>
+    <string name="container_restart_desc">Every process in %1$s will be stopped, then a fresh shell and the AI service will start. Container files and installed packages are kept.</string>
+    <string name="container_restart_action">Restart</string>
+    <string name="container_restarting">Restarting container…</string>
+    <string name="container_opencode_password">Service password</string>
+    <string name="container_opencode_port">Port: %1$s</string>
+    <string name="container_opencode_port_auto">auto (assigned on start)</string>
+    <string name="container_cloning">Cloning…</string>
+    <string name="container_rebuild_title">Reinstall stack?</string>
+    <string name="container_rebuild_desc">The step state is cleared and the bootstrap script runs again. Packages already installed are kept.</string>
+    <string name="container_rebuild_action">Reinstall</string>
+    <string name="container_footer">PRoot shares the host network stack, so a port listened on inside the container is reachable on the same port of this device.</string>
+    <string name="ai_starting">Starting the AI service… the first install can take a few minutes.</string>
+    <string name="ai_requires_android9">AI needs Android 9 or later because it runs in a separate process from the terminal. The terminal itself still works on this device.</string>
+    <string name="ai_not_ready">The AI service for %1$s is not ready yet. It may still be installing; try again shortly.</string>
+
+    <string name="task_notification_title">ZeroLinux task</string>
+    <string name="task_notification_done">%1$s finished</string>
+    <string name="container_task_canceled">Task canceled</string>
+    <string name="container_auto_retry">Install stalled, retrying automatically (%1$d/2)</string>
+    <string name="task_channel_name">Container tasks</string>
+    <string name="task_channel_desc">Rootfs download and software installation progress</string>
+    <string name="terminal_containers">Containers</string>
+
+    <string name="terminal_sessions">Sessions</string>
+    <string name="terminal_close_all">Close all sessions</string>
+    <string name="terminal_rename">Rename session</string>
+    <string name="terminal_no_container">No container yet</string>
+    <string name="terminal_empty_desc">Create a container first, then come back.</string>
+    <string name="terminal_no_rootfs">This container has no rootfs yet. Install it from container settings.</string>
+    <string name="terminal_native_notice">Native renderer is selected. Switch to Web in Settings to use xterm.js.</string>
+    <string name="terminal_files">Files</string>
+
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_font_scale">Terminal font</string>
+    <string name="settings_font_scale_desc">Affects the text inside the terminal only. Current: %1$d%%</string>
+    <string name="settings_ui_scale">Global font (UI text)</string>
+    <string name="settings_ui_scale_desc">Affects all UI text: settings, lists and the top bar. Current: %1$d%%</string>
+    <string name="settings_section_terminal">Terminal</string>
+    <string name="settings_renderer_web">xterm.js</string>
+    <string name="settings_renderer_native">Native</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_haptics_desc">Vibrate on long-press selection and button taps.</string>
+    <string name="settings_notifications">Completion alerts</string>
+    <string name="settings_section_mirror">Default mirror</string>
+    <string name="settings_section_logs">Diagnostics</string>
+    <string name="settings_export_logs">Export logs</string>
+    <string name="settings_section_license">Licenses</string>
+    <string name="settings_license_note">ZeroLinux is distributed under GPL-2.0-or-later because it bundles PRoot. Sources for every bundled component ship with this repository.</string>
+    <string name="perm_sound_title">Notification sound</string>
+
+    <!-- file drawer -->
+    <string name="files_copy_path">Copy path</string>
+    <string name="files_hidden_show">Hidden</string>
+    <string name="files_hidden_hide">Hide</string>
+    <string name="files_parent">Parent folder</string>
+    <string name="files_shortcuts">Shortcuts</string>
+    <string name="files_sd_card">sdcard</string>
+    <string name="files_log_desc">Terminal history of container sessions</string>
+    <string name="files_shortcut_removed">Shortcut removed</string>
+    <string name="files_need_storage">Storage permission required</string>
+    <string name="files_deleted">%1$s deleted</string>
+    <string name="files_delete_failed">Delete failed: %1$s</string>
+    <string name="files_delete_failed_readonly">parent directory is read-only</string>
+    <string name="files_delete_failed_denied">permission denied</string>
+    <string name="files_delete_irreversible">This cannot be undone.</string>
+    <string name="files_empty">Empty directory</string>
+    <string name="files_not_dir">Not a directory</string>
+    <string name="files_link_broken">Link is broken</string>
+    <string name="files_action_copy_name">Copy name</string>
+    <string name="files_action_copy_path">Copy guest path</string>
+    <string name="files_action_open_terminal">Open in terminal</string>
+    <string name="files_action_copy_host">Copy host path</string>
+    <string name="files_action_shortcut">Create shortcut</string>
+    <string name="files_action_show_path">Show full path</string>
+    <string name="action_close">Close</string>
+    <string name="files_pick_hint">Choose the destination folder for %1$s</string>
+    <string name="files_pick_here">Use this folder</string>
+    <string name="files_shortcut_created">Shortcut created</string>
+    <string name="files_delete_title">Delete this item?</string>
+
+    <!-- SAF file sharing / mirror scope / init button / task queue -->
+    <string name="mirror_new_only_hint">Mirror saved. Only new containers will use it.</string>
+    <string name="settings_section_share">File sharing (SAF)</string>
+    <string name="settings_saf_desc">ZeroLinux is registered as a system document provider. Third-party file managers can browse container rootfs through the system picker.</string>
+    <string name="settings_saf_open">Open in system picker</string>
+    <string name="settings_saf_unavailable">No file picker available on this device</string>
+    <string name="container_init_click">Tap to initialize</string>
+    <string name="container_init_retry">Retry initialization</string>
+    <string name="container_init_running">Initializing…</string>
+    <string name="containers_tasks_more">%1$d more tasks</string>
+    <string name="containers_task_queued">queued</string>
+
+    <!-- 切语言后整栈重建 / 收回硬编码界面文案 -->
+    <string name="terminal_exit_again">Press back again to exit</string>
+    <!-- WebView 空态：由 TerminalActivity 在 onPageFinished 注入 -->
+    <string name="terminal_empty_shell_desc">Tap + in a new session to open a shell</string>
+    <!-- Terminal subtitle / session row -->
+    <string name="terminal_storage">Storage %1$s</string>
+    <string name="terminal_sep">" · "</string>
+    <string name="terminal_exited">Exited</string>
+
+    <!-- Container list -->
+    <string name="container_storage">Storage %1$s</string>
+    <string name="container_init_start_toast">Starting initialization: %1$s</string>
+    <string name="container_init_failed">Initialization failed: %1$s</string>
+    <string name="container_optional_missing">Some optional components were not installed: %1$s</string>
+    <string name="container_init_progress">Initializing</string>
+    <string name="container_init_progress_detail">Initializing · %1$s</string>
+    <string name="container_status_degraded">Ready (optional components missing)</string>
+    <string name="action_confirm">OK</string>
+
+    <!-- Notification sound toasts -->
+    <string name="oc_toast_silent">System muted or in Do Not Disturb, no sound played</string>
+    <string name="oc_toast_sound_played">Notification sound played</string>
+
+    <!-- Language switch overlay -->
+    <string name="language_switching">Switching language…</string>
+
+    <!-- Documents provider roots -->
+    <string name="docs_container_summary">ZeroLinux container</string>
+    <string name="docs_container_summary_distro">ZeroLinux container · %1$s</string>
+    <string name="docs_internal_storage_desc">Internal storage (user-visible)</string>
+    <!-- Onboarding wizard -->
+    <string name="welcome_body">ZeroLinux runs a full Linux userland in a container on your phone: a real shell, a package manager, and a complete toolchain, without root.</string>
+    <string name="perm_storage_why">Storage is the permission that matters most: it lets containers read and write files you can see in your file manager. The other two keep sessions alive.</string>
+    <string name="perm_later_hint">You can grant these later in Settings.</string>
+    <string name="wizard_container_existing">Existing container: %1$s</string>
+    <string name="wizard_container_planned">Will create: %1$s</string>
+    <string name="wizard_container_create">Create a container manually</string>
+    <string name="wizard_container_hint">You can add or switch containers any time from the top bar.</string>
+    <string name="wizard_container_creating">Creating the container…</string>
+    <string name="wizard_create_failed">Container creation failed: %1$s</string>
+    <string name="wizard_create_missing">Could not create the container. Please try again.</string>
+    <string name="wizard_ready_title">All set</string>
+    <string name="wizard_ready_body">Tap the button below to open the terminal. This guide will not appear again; clearing app data brings it back.</string>
+    <string name="wizard_ready_distro">Distribution: %1$s</string>
+    <string name="wizard_ready_container">Container: %1$s</string>
+    <string name="wizard_ready_hint">Tip: permissions and this guide can both be revisited in Settings.</string>
+    <string name="container_auto_init_done">Initialization complete.</string>
+    <string name="container_auto_init_failed">Initialization did not finish: %1$s. Tap Rebuild below to retry.</string>
+</resources>

@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZeroLinux</string>
+    <string name="app_tagline">无需 root 的 Linux 容器</string>
+
+    <string name="wizard_skip">跳过</string>
+    <string name="wizard_next">继续</string>
+    <string name="wizard_back">上一步</string>
+    <string name="wizard_done">进入 ZeroLinux</string>
+    <string name="step_of">第 %1$d 步，共 %2$d 步</string>
+
+    <string name="welcome_title">口袋里的 Linux</string>
+    <string name="welcome_sub">ZeroLinux 基于 PRoot 同时运行 Ubuntu、Alpine、Kali 与 Debian。不需要 root，不需要解锁。</string>
+    <string name="welcome_cta">开始使用</string>
+
+    <string name="perm_title">权限</string>
+    <string name="perm_sub">这三项权限用于维持容器存活，随时可以在设置中复查。</string>
+    <string name="perm_storage">存储权限</string>
+    <string name="perm_storage_desc">读写与容器共享的文件。</string>
+    <string name="perm_notification">通知权限</string>
+    <string name="perm_notification_desc">会话运行期间显示常驻通知。</string>
+    <string name="perm_background">后台运行权限</string>
+    <string name="perm_background_desc">息屏后保持容器继续运行。</string>
+    <string name="perm_grant">授予</string>
+    <string name="perm_granted">已授予</string>
+    <string name="perm_not_granted">未授予</string>
+    <string name="perm_partial">%1$d / %2$d 项已授予</string>
+    <string name="perm_open_settings">打开设置</string>
+
+    <string name="distro_title">选择系统</string>
+    <string name="distro_sub">之后可以在顶栏的容器管理界面创建更多容器。</string>
+    <string name="distro_ubuntu">Ubuntu</string>
+    <string name="distro_ubuntu_desc">兼容性最好 · 下载 33 MB</string>
+    <string name="distro_alpine">Alpine</string>
+    <string name="distro_alpine_desc">小巧快速 · 下载 4 MB</string>
+    <string name="distro_kali">Kali</string>
+    <string name="distro_kali_desc">安全工具箱 · 下载 1.7 GB</string>
+    <string name="distro_debian">Debian</string>
+    <string name="distro_debian_desc">稳定可靠 · 下载 34 MB</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="settings_language_zh">中文</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_section_permissions">权限</string>
+    <string name="settings_section_runtime">运行环境</string>
+    <string name="settings_section_about">关于</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_process">进程</string>
+    <string name="settings_abi">ABI</string>
+    <string name="settings_distro">已选系统</string>
+    <string name="settings_none">未选择</string>
+    <string name="settings_proot">PRoot 引擎</string>
+    <string name="settings_pty">PTY 桥接</string>
+    <string name="settings_ok">就绪</string>
+    <string name="settings_fail">不可用</string>
+    <string name="settings_restart_wizard">重新运行引导</string>
+
+    <string name="terminal_title">终端</string>
+    <string name="terminal_empty">尚未创建容器</string>
+    <string name="terminal_hint">容器运行时将在第 2 步接入，原生层已就绪。</string>
+    <string name="terminal_settings">设置</string>
+    <string name="terminal_check">环境自检</string>
+    <string name="terminal_prompt">root@zerolinux:~#</string>
+    <string name="terminal_process">进程</string>
+    <string name="terminal_abi">ABI</string>
+    <string name="terminal_libs">原生库</string>
+
+
+    <string name="notif_channel">容器会话</string>
+    <string name="notif_title">ZeroLinux 正在运行</string>
+    <string name="notif_text">容器会话处于活动状态</string>
+    <!-- containers -->
+    <string name="containers_title">容器</string>
+    <string name="containers_empty_hint">还没有容器</string>
+    <string name="containers_count">%1$d 个容器 · 当前 %2$s</string>
+    <string name="containers_none_active">无</string>
+    <string name="containers_empty_title">还没有容器</string>
+    <string name="containers_empty_desc">选一个发行版，ZeroLinux 会下载对应的 rootfs。</string>
+    <string name="containers_new">新建容器</string>
+    <string name="containers_data">备份</string>
+    <string name="containers_restore">从 .zlbak 恢复</string>
+    <string name="containers_delete_title">删除容器？</string>
+    <string name="containers_delete_desc">%1$s 及其 rootfs 会被永久删除，正在进行的安装任务会被取消。</string>
+    <string name="containers_clone_title">克隆容器</string>
+    <string name="containers_clone_desc">连同全部设置克隆 %1$s。</string>
+    <string name="containers_clone_confirm_title">确认克隆</string>
+    <string name="containers_clone_confirm_desc">将创建 %1$s 的完整副本「%2$s」，源容器不会被修改。</string>
+    <string name="containers_clone_action">克隆</string>
+    <string name="containers_clone_hint">例如 kali-2</string>
+    <string name="containers_clone_err_invalid">只能使用 1-40 位字母、数字、点、下划线和短横线。</string>
+    <string name="containers_clone_err_taken">这个 ID 已被其它容器使用。</string>
+    <string name="containers_active">当前</string>
+    <string name="containers_action_use">切换为当前</string>
+    <string name="containers_action_use_sub">设为默认容器</string>
+    <string name="containers_switch_confirm_title">切换默认 AI 容器？</string>
+    <string name="containers_switch_confirm_desc">将「%1$s」设为当前容器后，AI 模块会改用该容器自己的 OpenCode 服务；原容器的 AI 后台状态并不会被清除。</string>
+    <string name="containers_switched">已切换默认 AI 容器：%1$s</string>
+    <string name="containers_action_open">详情</string>
+    <string name="containers_action_init">重装软件栈</string>
+    <string name="containers_action_clone">克隆</string>
+
+    <string name="drawer_guide_title">两个侧滑栏</string>
+    <string name="drawer_guide_sessions">① 从屏幕左边缘向右滑 → 打开「会话列表」，可新建、重命名或关闭会话。</string>
+    <string name="drawer_guide_files">② 从屏幕右边缘向左滑 → 打开「文件」，浏览当前容器目录。</string>
+    <string name="drawer_guide_start">开始使用</string>
+
+    <string name="action_open">打开</string>
+    <string name="action_delete">删除</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_save">保存</string>
+    <string name="saved">已保存</string>
+    <string name="copied">已复制</string>
+
+    <string name="container_status_not_ready">无 rootfs</string>
+    <string name="container_status_deleting">删除中…</string>
+    <string name="container_status_pending">待初始化</string>
+    <string name="container_status_ready">就绪</string>
+
+    <string name="new_container_title">新建容器</string>
+    <string name="new_container_subtitle">下载 · 换源 · 装包</string>
+    <string name="new_container_distro">发行版</string>
+    <string name="new_container_identity">标识</string>
+    <string name="new_container_note_title">接下来会发生什么</string>
+    <string name="new_container_note">rootfs 会下载到应用私有目录，随后 apt/apk 换到镜像源，并安装 curl、git、python、node、rust、go 等常用开发工具。</string>
+    <string name="new_container_create">创建并安装</string>
+    <string name="new_container_import">从本地导入 rootfs…</string>
+
+    <string name="container_field_id">容器 ID</string>
+    <string name="container_field_uuid">UUID</string>
+    <string name="container_field_created">创建时间</string>
+    <string name="container_field_abi">ABI</string>
+    <string name="container_field_error">最近错误</string>
+
+    <string name="err_id_empty">ID 不能为空</string>
+    <string name="err_id_charset">只能使用字母、数字、点、横线、下划线</string>
+    <string name="err_id_taken">该 ID 已被占用</string>
+
+    <string name="container_missing">容器不存在</string>
+    <string name="container_section_info">概览</string>
+    <string name="container_section_identity">标识</string>
+    <string name="container_section_mirror">镜像源</string>
+    <string name="container_section_actions">操作</string>
+
+    <string name="container_mirror_custom">自定义镜像地址</string>
+    <string name="container_mirror_custom_hint">例如 https://mirrors.example.com</string>
+    <string name="container_mirror_apply_hint">修改镜像源后需要重新初始化才会生效。</string>
+    <string name="container_mirror_saved">镜像源已保存，重新初始化后生效。</string>
+
+    <string name="mirror_domestic">国内</string>
+    <string name="mirror_overseas">官方</string>
+    <string name="mirror_custom">自定义</string>
+
+    <string name="container_lan_url">局域网地址</string>
+    <string name="container_copy_url">复制地址</string>
+
+    <string name="container_action_rebuild">重建软件栈</string>
+    <string name="container_action_init">安装软件栈</string>
+    <string name="container_action_backup">导出备份</string>
+    <string name="container_action_restart">重启容器</string>
+    <string name="container_restart_title">重启容器？</string>
+    <string name="container_restart_desc">会停止「%1$s」内的所有进程，然后重新拉起 shell 与 AI 服务；容器的 rootfs、配置和已安装软件都会保留。</string>
+    <string name="container_restart_action">重启</string>
+    <string name="container_restarting">正在重启容器…</string>
+    <string name="container_opencode_password">服务密码</string>
+    <string name="container_opencode_port">端口：%1$s</string>
+    <string name="container_opencode_port_auto">自动分配（启动后生成）</string>
+    <string name="container_cloning">正在克隆…</string>
+    <string name="container_rebuild_title">重建软件栈？</string>
+    <string name="container_rebuild_desc">会清空步骤状态并重新执行初始化脚本，已安装的包不会重复下载。</string>
+    <string name="container_rebuild_action">重建</string>
+    <string name="container_footer">PRoot 与宿主共享网络栈，容器内监听的端口可直接在本机同端口访问。</string>
+    <string name="ai_starting">正在启动 AI 服务…首次安装可能需要几分钟。</string>
+    <string name="ai_requires_android9">AI 需要 Android 9 及以上系统：它必须与终端分进程运行。当前系统的终端功能仍可正常使用。</string>
+    <string name="ai_not_ready">「%1$s」的 AI 服务尚未就绪，可能还在安装，请稍后重试。</string>
+
+    <string name="task_notification_title">ZeroLinux 任务</string>
+    <string name="task_notification_done">%1$s 已完成</string>
+    <string name="container_task_canceled">任务已取消</string>
+    <string name="container_auto_retry">安装卡住，正在自动重试（%1$d/2）</string>
+    <string name="task_channel_name">容器任务</string>
+    <string name="task_channel_desc">rootfs 下载与软件安装进度</string>
+    <string name="terminal_containers">容器</string>
+
+    <string name="terminal_sessions">会话</string>
+    <string name="terminal_close_all">关闭全部会话</string>
+    <string name="terminal_rename">重命名会话</string>
+    <string name="terminal_no_container">还没有容器</string>
+    <string name="terminal_empty_desc">先创建一个容器，再回到这里。</string>
+    <string name="terminal_no_rootfs">该容器还没有 rootfs，请到容器设置里安装。</string>
+    <string name="terminal_native_notice">当前使用原生渲染器。请在设置里切回 Web 以使用 xterm.js。</string>
+    <string name="terminal_files">文件</string>
+
+    <string name="settings_section_appearance">外观</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_font_scale">终端字体</string>
+    <string name="settings_font_scale_desc">只影响终端里字符的大小，不影响界面文字。当前 %1$d%%</string>
+    <string name="settings_ui_scale">全局字体（界面文字）</string>
+    <string name="settings_ui_scale_desc">影响全部界面文字大小，包括设置、列表与顶栏。当前 %1$d%%</string>
+    <string name="settings_section_terminal">终端</string>
+    <string name="settings_renderer_web">xterm.js</string>
+    <string name="settings_renderer_native">原生</string>
+    <string name="settings_haptics">触感反馈</string>
+    <string name="settings_haptics_desc">长按选择与按钮点击时振动。</string>
+    <string name="settings_notifications">完成提醒</string>
+    <string name="settings_section_mirror">默认镜像源</string>
+    <string name="settings_section_logs">诊断</string>
+    <string name="settings_export_logs">导出日志</string>
+    <string name="settings_section_license">开源许可</string>
+    <string name="settings_license_note">因为内置 PRoot，ZeroLinux 以 GPL-2.0-or-later 分发。所有内置组件的源码随本仓库一同提供。</string>
+    <string name="perm_sound_title">通知声音</string>
+
+    <!-- file drawer -->
+    <string name="files_copy_path">复制路径</string>
+    <string name="files_hidden_show">显示隐藏</string>
+    <string name="files_hidden_hide">隐藏</string>
+    <string name="files_parent">返回上级文件夹</string>
+    <string name="files_shortcuts">快捷方式</string>
+    <string name="files_log_desc">容器会话的终端历史输出内容</string>
+    <string name="files_empty">空目录</string>
+    <string name="files_not_dir">不是目录</string>
+    <string name="files_link_broken">链接已失效</string>
+    <string name="files_action_copy_name">复制名称</string>
+    <string name="files_action_copy_path">复制容器路径</string>
+    <string name="files_action_open_terminal">在终端打开</string>
+    <string name="files_action_copy_host">复制手机路径</string>
+    <string name="files_action_shortcut">创建快捷方式</string>
+    <string name="files_action_show_path">查看完整路径</string>
+    <string name="action_close">关闭</string>
+    <string name="files_pick_hint">为 %1$s 选择目标目录</string>
+    <string name="files_pick_here">选此目录</string>
+    <string name="files_shortcut_created">快捷方式已创建</string>
+    <string name="files_delete_title">确定删除该项？</string>
+
+    <!-- SAF 文件共享 / 镜像作用域 / 初始化按钮 / 任务队列 -->
+    <string name="mirror_new_only_hint">镜像源已保存，仅对新建容器生效</string>
+    <string name="settings_section_share">文件共享（SAF）</string>
+    <string name="settings_saf_desc">ZeroLinux 已注册为系统文档提供方，第三方文件管理器可在系统选择器里浏览容器 rootfs。</string>
+    <string name="settings_saf_open">在系统选择器中打开</string>
+    <string name="settings_saf_unavailable">本机没有可用的文件选择器</string>
+    <string name="container_init_click">点击初始化</string>
+    <string name="container_init_retry">重试初始化</string>
+    <string name="container_init_running">初始化中…</string>
+    <string name="containers_tasks_more">还有 %1$d 个任务</string>
+    <string name="containers_task_queued">排队中</string>
+
+    <!-- 文件侧栏（与 values/strings_zl_files_drawer.xml 的 key 集保持一致） -->
+    <string name="zl_files_container_root">容器根目录</string>
+    <string name="zl_files_default_undeletable">默认快捷方式不可删除</string>
+    <string name="zl_files_shortcut_delete_title">删除快捷方式</string>
+    <string name="zl_files_shortcut_delete_confirm">删除快捷方式「%1$s」？</string>
+    <string name="zl_files_perm_all_files_title">需要「所有文件访问」权限</string>
+    <string name="zl_files_perm_all_files_msg">需要「所有文件访问」权限才能浏览 sdcard</string>
+    <string name="zl_files_perm_storage_msg">需要存储权限才能浏览 sdcard</string>
+    <string name="zl_files_perm_all_files_body">Android 13 起普通存储权限已无法读取 sdcard 根目录。请在系统设置里为本应用打开「所有文件访问」，返回后会自动进入 sdcard。</string>
+    <string name="zl_files_perm_grant">去授权</string>
+
+    <!-- 补齐默认资源里有、中文缺失的 8 条（否则中文界面回退英文） -->
+    <string name="files_sd_card">sdcard</string>
+    <string name="files_shortcut_removed">快捷方式已移除</string>
+    <string name="files_need_storage">需要存储权限</string>
+    <string name="files_deleted">已删除 %1$s</string>
+    <string name="files_delete_failed">删除失败：%1$s</string>
+    <string name="files_delete_failed_readonly">父目录是只读的</string>
+    <string name="files_delete_failed_denied">权限不足</string>
+    <string name="files_delete_irreversible">此操作不可撤销。</string>
+
+    <!-- 切语言后整栈重建 / 收回硬编码界面文案 -->
+    <string name="terminal_exit_again">再按一次退出</string>
+    <!-- WebView 空态：由 TerminalActivity 在 onPageFinished 注入 -->
+    <string name="terminal_empty_shell_desc">在新会话里点 + 打开一个 shell</string>
+    <!-- 终端副标题 / 会话行 -->
+    <string name="terminal_storage">存储 %1$s</string>
+    <string name="terminal_sep">" · "</string>
+    <string name="terminal_exited">已退出</string>
+
+    <!-- 容器列表 -->
+    <string name="container_storage">存储 %1$s</string>
+    <string name="container_init_start_toast">开始初始化 %1$s</string>
+    <string name="container_init_failed">初始化失败：%1$s</string>
+    <string name="container_optional_missing">部分可选组件未安装：%1$s</string>
+    <string name="container_init_progress">初始化中</string>
+    <string name="container_init_progress_detail">初始化中 · %1$s</string>
+    <string name="container_status_degraded">已就绪（部分可选组件缺失）</string>
+    <string name="action_confirm">确定</string>
+
+    <!-- 通知声音 Toast -->
+    <string name="oc_toast_silent">系统静音或勿扰，未发声</string>
+    <string name="oc_toast_sound_played">已播放提示音</string>
+
+    <!-- 语言切换悬浮窗 -->
+    <string name="language_switching">正在切换语言…</string>
+
+    <!-- 文档提供方卷 -->
+    <string name="docs_container_summary">ZeroLinux 容器</string>
+    <string name="docs_container_summary_distro">ZeroLinux 容器 · %1$s</string>
+    <string name="docs_internal_storage_desc">用户可见的内部存储</string>
+    <!-- 首次引导 -->
+    <string name="welcome_body">ZeroLinux 在手机上运行完整的 Linux 用户空间：真正的 shell、包管理器与全套工具链，不需要 root。</string>
+    <string name="perm_storage_why">存储权限最关键：容器靠它读写你在文件管理器里能看到的文件。另外两项用于保持会话存活。</string>
+    <string name="perm_later_hint">也可以稍后在设置里补齐这几项授权。</string>
+    <string name="wizard_container_existing">已有容器：%1$s</string>
+    <string name="wizard_container_planned">将创建容器：%1$s</string>
+    <string name="wizard_container_create">手动创建容器</string>
+    <string name="wizard_container_hint">之后可以在顶栏随时新增或切换容器。</string>
+    <string name="wizard_container_creating">正在创建容器…</string>
+    <string name="wizard_create_failed">创建容器失败：%1$s</string>
+    <string name="wizard_create_missing">容器创建失败，请重试。</string>
+    <string name="wizard_ready_title">准备就绪</string>
+    <string name="wizard_ready_body">点下面的按钮进入终端。这份引导之后不会再出现；清除应用数据后会重新显示。</string>
+    <string name="wizard_ready_distro">发行版：%1$s</string>
+    <string name="wizard_ready_container">容器：%1$s</string>
+    <string name="wizard_ready_hint">提示：权限与引导都可以在设置里重新查看。</string>
+    <string name="container_auto_init_done">初始化完成。</string>
+    <string name="container_auto_init_failed">初始化未完成：%1$s。可点下面的「重建」重试。</string>
+</resources>
