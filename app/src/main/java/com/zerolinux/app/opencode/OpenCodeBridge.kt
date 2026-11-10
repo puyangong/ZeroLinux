@@ -586,6 +586,7 @@ object OpenCodeBridge {
         """.trimIndent().replace("@@", "$")
         val job = scope.launch {
             runCatching {
+                // 供应商配置由用户在设置页手动「共享」，这里不再自动合并。
                 val result = ContainerShell.exec(
                     ctx,
                     rootfs,

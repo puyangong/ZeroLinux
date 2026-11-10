@@ -11,6 +11,8 @@ import com.zerolinux.app.engine.ContainerShell
 import com.zerolinux.app.engine.ProotLauncher
 import com.zerolinux.app.engine.SessionSignals
 import com.zerolinux.app.files.ContainerExternal
+import com.zerolinux.app.files.ShortcutStore
+import com.zerolinux.app.ui.files.invalidateContainerRoot
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -742,7 +744,13 @@ class ContainerOps(private val ctx: Context) {
         ContainerExternal.remove(ctx, cfg?.id, uuid)
         AppPaths.containerDir(ctx, uuid).deleteRecursively()
         File(AppPaths.l2sDir(ctx), uuid).deleteRecursively()
+        // 容器没了，文件管理器里的快捷方式也要一起清掉，否则 shortcuts.json
+        // 里会留下指向已删除 guest 路径的死链。
+        runCatching { ShortcutStore(ctx).removeForContainer(uuid) }
         repo.delete(uuid)
+        // 最后再通知 DocumentsProvider 重新枚举 root：Android 文件管理器不会
+        // 自己轮询，不 notify 的话删除后的容器会一直留在侧边栏里点不进去。
+        runCatching { invalidateContainerRoot(ctx, uuid) }
     }
 
     // ---------------------------------------------------------------- backup

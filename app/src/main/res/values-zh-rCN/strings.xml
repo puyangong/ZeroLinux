@@ -315,4 +315,8 @@
     <string name="wizard_ready_hint">提示：权限与引导都可以在设置里重新查看。</string>
     <string name="container_auto_init_done">初始化完成。</string>
     <string name="container_auto_init_failed">初始化未完成：%1$s。可点下面的「重建」重试。</string>
+    <!-- AI 供应商共享：仅手动触发，重启软件后生效 -->
+    <string name="container_ai_share">共享 AI 供应商配置</string>
+    <string name="container_ai_share_done">已追加 %1$d 项供应商配置，重启软件后生效</string>
+    <string name="container_ai_share_hint">从其它容器追加本容器缺失的供应商；不会覆盖已有配置；需要重启软件才会生效。</string>
 </resources>

@@ -14,8 +14,8 @@ android {
         applicationId = "com.zerolinux.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 81
-        versionName = "0.3.69"
+        versionCode = 84
+        versionName = "0.3.72"
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
@@ -120,7 +120,7 @@ dependencies {
     // rootfs 解压：Android 自带 toybox tar 不支持 xz，必须自己解
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // OpenCode 客户端模块（WebView 壳 + 原生桥）
-    implementation(files("libs/OpenCodeMobile-1.3.166.aar"))
+    implementation(files("libs/OpenCodeMobile-1.3.177.aar"))
     implementation("org.apache.commons:commons-compress:1.27.1")
     implementation("commons-io:commons-io:2.18.0")
     implementation("org.tukaani:xz:1.10")

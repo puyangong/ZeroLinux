@@ -326,6 +326,30 @@ private fun Body(
                     onChanged()
                 }
             )
+            Spacer(Modifier.height(10.dp))
+            // 手动把其它容器已配置的模型供应商追加进来；不在启动时自动做，
+            // 避免用户还没确认就被写入别的容器的凭证。
+            ZlGhostButton(
+                text = stringResource(R.string.container_ai_share),
+                onClick = {
+                    scope.launch {
+                        val added = withContext(Dispatchers.IO) {
+                            com.zerolinux.app.opencode.AiProviderShare.sync(ctx, cfg.uuid)
+                        }
+                        android.widget.Toast.makeText(
+                            ctx,
+                            ctx.getString(R.string.container_ai_share_done, added),
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = stringResource(R.string.container_ai_share_hint),
+                style = ZlMonoSmall,
+                color = ZlMuted
+            )
         }
 
         Spacer(Modifier.height(14.dp))

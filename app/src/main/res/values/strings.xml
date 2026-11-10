@@ -302,4 +302,8 @@
     <string name="wizard_ready_hint">Tip: permissions and this guide can both be revisited in Settings.</string>
     <string name="container_auto_init_done">Initialization complete.</string>
     <string name="container_auto_init_failed">Initialization did not finish: %1$s. Tap Rebuild below to retry.</string>
+    <!-- AI provider sharing: manual only, takes effect after app restart. -->
+    <string name="container_ai_share">Share AI provider config</string>
+    <string name="container_ai_share_done">Appended %1$d provider entries. Restart the app to apply.</string>
+    <string name="container_ai_share_hint">Appends providers that other containers already have. Existing entries are never overwritten. Restart the app to apply.</string>
 </resources>
