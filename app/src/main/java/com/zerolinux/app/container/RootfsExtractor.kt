@@ -19,7 +19,17 @@ import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
  */
 object RootfsExtractor {
 
-    suspend fun extract(archive: File, targetDir: File, onProgress: (bytes: Long) -> Unit = {}) {
+    suspend fun extract(
+        archive: File,
+        targetDir: File,
+        /**
+         * 备份包里的条目都带 `rootfs/` 前缀，但 guest 里的绝对路径没有这一层。
+         * 硬链接退回符号链接时要按去掉前缀后的路径指，否则链接会指向 guest 里
+         * 并不存在的 `/rootfs/...`。
+         */
+        hardlinkGuestPrefix: String = "",
+        onProgress: (bytes: Long) -> Unit = {}
+    ) {
         targetDir.mkdirs()
         val dirModes = ArrayList<Pair<File, Int>>(512)
         val fileModes = ArrayList<Pair<File, Int>>(4096)
@@ -59,9 +69,17 @@ object RootfsExtractor {
                                     Os.link(File(targetDir, linkTarget).absolutePath, out.absolutePath)
                                 }.isSuccess
                                 if (!ok) {
+                                    val guestTarget = if (
+                                        hardlinkGuestPrefix.isNotEmpty() &&
+                                        linkTarget.startsWith(hardlinkGuestPrefix)
+                                    ) {
+                                        linkTarget.removePrefix(hardlinkGuestPrefix)
+                                    } else {
+                                        linkTarget
+                                    }
                                     val symlinkTarget =
                                         if (entry.linkName.startsWith("/")) entry.linkName
-                                        else "/$linkTarget"
+                                        else "/$guestTarget"
                                     if (runCatching { Os.symlink(symlinkTarget, out.absolutePath) }.isFailure) {
                                         runCatching { File(targetDir, linkTarget).copyTo(out, overwrite = true) }
                                         fileModes.add(out to entry.mode)
@@ -103,6 +121,27 @@ object RootfsExtractor {
         for ((f, mode) in fileModes) chmod(f, mode)
         for ((f, mode) in dirModes.asReversed()) chmod(f, mode)
     }
+
+    /**
+     * 判断 [archive] 是不是本 App 导出的 .zlbak。
+     *
+     * 只看最前面几个条目里有没有根部 `meta/backup.json`，不解压正文。
+     * 用户经常把备份包丢进「从本地导入 rootfs」入口，若直接按 rootfs 解压，
+     * 恢复出来的容器根目录里会多一层 `rootfs/`，guest 里连 /bin/sh 都没有。
+     */
+    fun looksLikeBackup(archive: File): Boolean = runCatching {
+        openStream(archive).use { raw ->
+            TarArchiveInputStream(BufferedInputStream(raw, 64 * 1024)).use { tar ->
+                var seen = 0
+                while (seen < 16) {
+                    val entry = tar.nextEntry ?: return@use false
+                    seen++
+                    if (sanitize(entry.name) == "meta/backup.json") return@use true
+                }
+                false
+            }
+        }
+    }.getOrDefault(false)
 
     private fun openStream(archive: File): InputStream {
         // 不能靠扩展名判断：备份恢复时 SAF 过来的文件会被改名成 backup.zlbak，

@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
+import org.apache.commons.compress.compressors.gzip.GzipParameters
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -53,6 +54,14 @@ class ContainerOps(private val ctx: Context) {
             get() = if (subPercent >= 0) subPercent.coerceIn(0, 100)
             else if (total <= 0) 0 else (step.coerceIn(0, total) * 100 / total)
     }
+
+    /**
+     * 本地导入的结果。
+     *
+     * `restored = true` 表示选中的是 .zlbak 备份，容器已经连同配置一起还原，
+     * 不能再跑一遍初始化；`false` 是普通 rootfs 压缩包，需要继续初始化。
+     */
+    data class Imported(val config: ContainerConfig, val restored: Boolean)
 
     private val repo = ContainerRepo(ctx)
 
@@ -499,6 +508,35 @@ class ContainerOps(private val ctx: Context) {
     // ------------------------------------------------------- offline archive
 
     /**
+     * 统一本地导入入口。
+     *
+     * 先嗅探文件头与首批 tar 条目：是 .zlbak 就走恢复（配置/初始化状态一起还原，
+     * 不再初始化），否则按离线 rootfs 压缩包安装。用户把备份包丢进
+     * 「从本地导入 rootfs」是很自然的事，必须先判断再解压，否则 rootfs 下会多出
+     * 一层 `rootfs/`，容器建出来根本起不了 shell。
+     */
+    suspend fun importArchive(
+        distro: DistroId,
+        archive: Uri,
+        id: String? = null,
+        onProgress: (Progress) -> Unit = {}
+    ): Imported = withContext(Dispatchers.IO) {
+        val tmp = File(ctx.cacheDir, "import-${System.currentTimeMillis()}.bin")
+        try {
+            onProgress(Progress(Stage.PREPARE, 0, 1, "copy archive"))
+            copyUriTo(archive, tmp)
+            if (RootfsExtractor.looksLikeBackup(tmp)) {
+                onProgress(Progress(Stage.RESTORE, 0, 1, "backup"))
+                Imported(restoreArchive(tmp, onProgress), restored = true)
+            } else {
+                Imported(installFromArchive(tmp, distro, id, onProgress), restored = false)
+            }
+        } finally {
+            tmp.delete()
+        }
+    }
+
+    /**
      * 从用户选中的本地 rootfs 压缩包建容器（首启离线包入口）。
      * 跳过下载与校验，直接解压；其余流程与在线创建一致。
      */
@@ -507,7 +545,14 @@ class ContainerOps(private val ctx: Context) {
         archive: Uri,
         id: String? = null,
         onProgress: (Progress) -> Unit = {}
-    ): ContainerConfig = withContext(Dispatchers.IO) {
+    ): ContainerConfig = importArchive(distro, archive, id, onProgress).config
+
+    private suspend fun installFromArchive(
+        file: File,
+        distro: DistroId,
+        id: String?,
+        onProgress: (Progress) -> Unit
+    ): ContainerConfig {
         val abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
 
         val cfg = ContainerConfig(
@@ -521,29 +566,14 @@ class ContainerOps(private val ctx: Context) {
         ContainerExternal.dir(ctx, cfg.id, cfg.uuid)
 
         try {
-            onProgress(Progress(Stage.PREPARE, 0, 1, "copy archive"))
+            onProgress(Progress(Stage.EXTRACT, 0, 1, file.name))
             val rootfs = AppPaths.containerRootfs(ctx, cfg.uuid)
             if (rootfs.exists()) rootfs.deleteRecursively()
             rootfs.mkdirs()
 
-            val tmp = File(ctx.cacheDir, "offline-${System.currentTimeMillis()}")
-            ctx.contentResolver.openInputStream(archive)?.use { input ->
-                tmp.outputStream().use { out ->
-                    val buf = ByteArray(256 * 1024)
-                    while (true) {
-                        currentCoroutineContext().ensureActive()
-                        val n = input.read(buf)
-                        if (n <= 0) break
-                        out.write(buf, 0, n)
-                    }
-                }
-            } ?: throw IllegalStateException("无法读取所选文件")
-
-            onProgress(Progress(Stage.EXTRACT, 0, 1, tmp.name))
-            RootfsExtractor.extract(tmp, rootfs) { read ->
+            RootfsExtractor.extract(file, rootfs) { read ->
                 onProgress(Progress(Stage.EXTRACT, (read / 1024).toInt(), 0, ""))
             }
-            tmp.delete()
 
             flattenNestedRoot(rootfs)
             ProotLauncher.ensureRootfsSkeleton(ctx, rootfs)
@@ -555,7 +585,7 @@ class ContainerOps(private val ctx: Context) {
             val done = cfg.copy(rootfsReady = true, lastError = "")
             repo.save(done)
             onProgress(Progress(Stage.EXTRACT, 1, 1, "rootfs ready"))
-            done
+            return done
         } catch (e: CancellationException) {
             throw e
         } catch (t: Throwable) {
@@ -767,19 +797,44 @@ class ContainerOps(private val ctx: Context) {
         val files = ArrayList<File>()
         collectFiles(srcRoot, files, atRoot = true)
         val total = files.size
+        val startedAt = System.currentTimeMillis()
+        // 硬链接只存一份：npm / rustup 会把同一个 248MB 的二进制硬链接到多个路径，
+        // 逐条按普通文件写会把备份和恢复后的体积放大好几倍。
+        val hardLinks = HashMap<String, String>()
+        // 旧版 PRoot 的 LINK2SYMLINK 把大文件搬进全局 l2s，rootfs 里只剩符号链接。
+        // 备份必须把正文打进去（否则换机不可用），但要记下「这条是 l2s 链接」，
+        // 恢复时再把正文放回 l2s、重建符号链接，避免导入后体积凭空涨一大截。
+        val l2sMap = LinkedHashMap<String, String>()
+        files.forEach { file ->
+            val target = l2sRealFile(file) ?: return@forEach
+            val rel = "rootfs/" + file.relativeTo(srcRoot).invariantSeparatorsPath
+            l2sMap[rel] = l2sRelativePath(target)
+        }
 
-        val out = ctx.contentResolver.openOutputStream(target)
+        // 必须要求截断：SAF 的 "w" 在部分 provider（包括 file://）上不会清掉旧文件
+        // 末尾，重名导出时新包会更短，旧尾巴留在后面 → 恢复时报
+        // "Garbage after a valid .gz stream"。
+        val out = runCatching { ctx.contentResolver.openOutputStream(target, "wt") }
+            .getOrNull()
+            ?: ctx.contentResolver.openOutputStream(target)
             ?: throw IllegalStateException("cannot open output stream")
 
         out.use { raw ->
-            GzipCompressorOutputStream(raw.buffered()).use { gz ->
+            // 备份是「整机 rootfs 打包」，瓶颈在 deflate 的 CPU 而不是磁盘。
+            // 用 1 级（BEST_SPEED）+ 256KB 缓冲：比默认 6 级快数倍，体积只大
+            // 一点点；.zlbak 本来就是冷备，不需要极限压缩比。
+            val params = GzipParameters().apply {
+                compressionLevel = java.util.zip.Deflater.BEST_SPEED
+                bufferSize = 256 * 1024
+            }
+            GzipCompressorOutputStream(raw.buffered(256 * 1024), params).use { gz ->
                 TarArchiveOutputStream(gz).use { tar ->
                     tar.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
                     tar.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
 
                     val meta = JSONObject()
                         .put("format", "zerolinux-backup")
-                        .put("version", 2)
+                        .put("version", 3)
                         .put("createdAt", System.currentTimeMillis())
                         .put("id", cfg.id)
                         .put("distro", cfg.distro.key)
@@ -791,12 +846,27 @@ class ContainerOps(private val ctx: Context) {
                     tar.write(metaBytes)
                     tar.closeArchiveEntry()
 
+                    if (l2sMap.isNotEmpty()) {
+                        val entries = JSONObject()
+                        l2sMap.forEach { (path, target) -> entries.put(path, target) }
+                        val l2sMeta = JSONObject()
+                            .put("format", "zerolinux-l2s")
+                            .put("version", 1)
+                            .put("entries", entries)
+                        val l2sBytes = l2sMeta.toString().toByteArray()
+                        tar.putArchiveEntry(
+                            TarArchiveEntry("meta/l2s.json").apply { size = l2sBytes.size.toLong() }
+                        )
+                        tar.write(l2sBytes)
+                        tar.closeArchiveEntry()
+                    }
+
                     val sidecar = AppPaths.containerJson(ctx, uuid)
                     if (sidecar.exists()) addFile(tar, sidecar, "container.json")
 
                     files.forEachIndexed { index, file ->
                         val rel = "rootfs/" + file.relativeTo(srcRoot).invariantSeparatorsPath
-                        addFile(tar, file, rel)
+                        addFile(tar, file, rel, hardLinkOf(file, rel, hardLinks))
                         if (index % 64 == 0) {
                             onProgress(Progress(Stage.ARCHIVE, index, total, rel))
                         }
@@ -805,12 +875,21 @@ class ContainerOps(private val ctx: Context) {
                 }
             }
         }
+        Log.i(
+            TAG,
+            "backup '$uuid' done: $total entries in ${System.currentTimeMillis() - startedAt} ms"
+        )
         onProgress(Progress(Stage.ARCHIVE, total, total, "done"))
     }
 
     // --------------------------------------------------------------- restore
 
-    /** 从 .zlbak 导入成一个新容器：新 uuid、新端口、ID 冲突自动加后缀。 */
+    /**
+     * 从 .zlbak 导入成一个新容器：新 uuid、新端口、ID 冲突自动加后缀。
+     *
+     * 导出时落盘的 SAF 文件先整份复制到 app 私有目录再解包：SAF 输入流不支持
+     * 随机访问，而恢复过程中要读两遍（嗅探 + 解包）。
+     */
     suspend fun restore(
         source: Uri,
         onProgress: (Progress) -> Unit = {}
@@ -820,50 +899,124 @@ class ContainerOps(private val ctx: Context) {
         try {
             onProgress(Progress(Stage.RESTORE, 0, 1, "copy"))
             val archive = File(tmp, "backup.zlbak")
-            ctx.contentResolver.openInputStream(source)?.use { input ->
-                archive.outputStream().use { output -> input.copyTo(output, 256 * 1024) }
-            } ?: throw IllegalStateException("cannot open input stream")
-
-            onProgress(Progress(Stage.RESTORE, 0, 1, "extract"))
-            val unpack = File(tmp, "unpack").apply { mkdirs() }
-            RootfsExtractor.extract(archive, unpack) { }
-            archive.delete()
-
-            onProgress(Progress(Stage.RESTORE, 0, 1, "meta"))
-            val metaFile = File(unpack, "meta/backup.json")
-            if (!metaFile.isFile) throw IllegalStateException("not a ZeroLinux backup")
-            val meta = JSONObject(metaFile.readText())
-            if (meta.optString("format") != "zerolinux-backup") {
-                throw IllegalStateException("unsupported backup format")
+            copyUriTo(source, archive)
+            if (!RootfsExtractor.looksLikeBackup(archive)) {
+                throw IllegalStateException("不是 ZeroLinux 备份包（缺少 meta/backup.json）")
             }
-
-            val sidecarFile = File(unpack, "container.json")
-            if (!sidecarFile.isFile) throw IllegalStateException("backup has no container.json")
-            val saved = ContainerConfig.fromJson(JSONObject(sidecarFile.readText()))
-
-            val newUuid = UUID.randomUUID().toString()
-            val cfg = saved.copy(
-                uuid = newUuid,
-                id = uniqueId(saved.id),
-                createdAt = System.currentTimeMillis(),
-                lastError = ""
-            )
-
-            val rootfs = AppPaths.containerRootfs(ctx, newUuid).apply { mkdirs() }
-            copyTree(File(unpack, "rootfs"), rootfs) { done, total ->
-                onProgress(Progress(Stage.RESTORE, done.toInt(), total.toInt(), "rootfs"))
-            }
-
-            repo.create(cfg)
-            ContainerExternal.dir(ctx, cfg.id, cfg.uuid)
-            ProotLauncher.ensureRootfsSkeleton(ctx, rootfs)
-
-            // 恢复出来的是已经初始化过的文件系统，但环境可能变了（ABI / 初始化状态），
-            // 保留 initialized，让用户自己决定是否重建。
-            onProgress(Progress(Stage.RESTORE, 1, 1, "done"))
-            cfg
+            restoreArchive(archive, onProgress)
         } finally {
             tmp.deleteRecursively()
+        }
+    }
+
+    /**
+     * 解包并还原一个备份。
+     *
+     * 关键点：
+     * - 先完整解到临时目录再校验，损坏的包不会在 containers/ 里留下半个容器；
+     * - rootfs 用 rename 搬进最终目录（同一文件系统，O(1)），不再逐文件复制：
+     *   复制既慢，又会把解包时刚恢复的权限位/软链接再走一遍有损流程；
+     * - 端口强制清零，由 OpenCodeBridge 重新分配。备份多半来自本机同一个容器，
+     *   沿用旧端口会和源容器抢同一个监听端口，AI 页面必然连不上；
+     * - ID 按本机规则清洗并去重，旧备份里的空 ID / 非法字符不会带进新容器。
+     */
+    private suspend fun restoreArchive(
+        archive: File,
+        onProgress: (Progress) -> Unit
+    ): ContainerConfig = withContext(Dispatchers.IO) {
+        val work = File(AppPaths.tmpDir(ctx), "unpack-${System.nanoTime()}").apply { mkdirs() }
+        var createdUuid: String? = null
+        var committed = false
+        try {
+            onProgress(Progress(Stage.RESTORE, 0, 1, "unpack"))
+            RootfsExtractor.extract(archive, work, hardlinkGuestPrefix = "rootfs/") { }
+
+            onProgress(Progress(Stage.RESTORE, 0, 1, "meta"))
+            val metaFile = File(work, "meta/backup.json")
+            if (!metaFile.isFile) throw IllegalStateException("不是 ZeroLinux 备份包（缺少 meta/backup.json）")
+            val meta = runCatching { JSONObject(metaFile.readText()) }
+                .getOrElse { throw IllegalStateException("备份包的 meta/backup.json 已损坏") }
+            if (meta.optString("format") != "zerolinux-backup") {
+                throw IllegalStateException("不支持的备份格式：${meta.optString("format")}")
+            }
+            val version = meta.optInt("version", 1)
+            if (version > 3) {
+                throw IllegalStateException("备份包版本 v$version 高于当前 App 支持的 v3，请升级 App")
+            }
+
+            val sidecarFile = File(work, "container.json")
+            if (!sidecarFile.isFile) throw IllegalStateException("备份包缺少 container.json")
+            val saved = runCatching { ContainerConfig.fromJson(JSONObject(sidecarFile.readText())) }
+                .getOrElse { throw IllegalStateException("备份包里的 container.json 已损坏") }
+
+            val srcRoot = File(work, "rootfs")
+            if (!srcRoot.isDirectory) throw IllegalStateException("备份包缺少 rootfs/ 目录")
+            // 只检查「能起来」的最低条件。备份包里的发行版可能是用户自己魔改的，
+            // 不能按已知发行版列表去卡。
+            if (!File(srcRoot, "bin/sh").exists() && !File(srcRoot, "usr/bin/sh").exists()) {
+                throw IllegalStateException("备份包 rootfs 不完整（缺少 /bin/sh）")
+            }
+
+            val uuid = UUID.randomUUID().toString()
+            createdUuid = uuid
+            val cfg = saved.copy(
+                uuid = uuid,
+                id = uniqueId(safeRestoreId(saved.id, saved.distro)),
+                createdAt = System.currentTimeMillis(),
+                initialized = saved.initialized,
+                rootfsReady = true,
+                initStep = "",
+                lastError = "",
+                // 端口必须重新分配：沿用备份里的端口会和源容器冲突。
+                opencodePort = 0
+            )
+
+            onProgress(Progress(Stage.RESTORE, 0, 1, "rootfs"))
+            val containerDir = AppPaths.containerDir(ctx, uuid).apply { mkdirs() }
+            val rootfs = File(containerDir, "rootfs")
+            val moved = runCatching { srcRoot.renameTo(rootfs) }.getOrDefault(false)
+            if (!moved) {
+                // rename 只在跨文件系统时失败（正常都在 app 私有目录内）。
+                // 退化成逐文件复制，权限位由 copyTree 照抄。
+                rootfs.mkdirs()
+                copyTree(srcRoot, rootfs) { done, total ->
+                    onProgress(Progress(Stage.RESTORE, done.toInt(), total.toInt(), "rootfs"))
+                }
+            }
+            if (!File(rootfs, "bin/sh").exists() && !File(rootfs, "usr/bin/sh").exists()) {
+                throw IllegalStateException("恢复失败：rootfs 写入不完整")
+            }
+            // 备份里把 l2s 大文件展开成了实体正文；这里再搬回 l2s 并重建符号链接，
+            // 让恢复后的容器体积回到备份前（大文件原本就不在 rootfs 里计数）。
+            val l2sMeta = File(work, "meta/l2s.json")
+            val l2sEntries = if (l2sMeta.isFile) {
+                runCatching { JSONObject(l2sMeta.readText()).optJSONObject("entries") }.getOrNull()
+            } else {
+                null
+            }
+            restoreL2s(rootfs, uuid, saved.uuid, l2sEntries, onProgress)
+            markRootfsComplete(rootfs)
+            ProotLauncher.ensureRootfsSkeleton(ctx, rootfs)
+
+            // 最后一步才落库：中途失败时 containers.json 里不会出现坏容器。
+            repo.create(cfg)
+            committed = true
+            // 外接目录只是给文件管理器看的镜像；外部存储不可用时不该让一次
+            // 已经成功的恢复报失败。
+            runCatching { ContainerExternal.dir(ctx, cfg.id, cfg.uuid) }
+            onProgress(Progress(Stage.RESTORE, 1, 1, "done"))
+            cfg
+        } catch (t: Throwable) {
+            if (!committed) {
+                createdUuid?.let { uuid ->
+                    runCatching { AppPaths.containerDir(ctx, uuid).deleteRecursively() }
+                    runCatching { File(AppPaths.l2sDir(ctx), uuid).deleteRecursively() }
+                    runCatching { repo.delete(uuid) }
+                }
+            }
+            throw t
+        } finally {
+            work.deleteRecursively()
         }
     }
 
@@ -915,12 +1068,70 @@ class ContainerOps(private val ctx: Context) {
     }
 
     /**
+     * 把备份里的 ID 清洗成本机规则（`[A-Za-z0-9._-]{1,32}`）。
+     *
+     * 旧备份可能来自不同版本，ID 为空或带空格/斜杠；直接建目录会出现
+     * 图片/文件快捷方式指向的路径里带奇怪字符，重命名也会一直报错。
+     */
+    private fun safeRestoreId(raw: String, distro: DistroId): String {
+        val cleaned = raw.trim()
+            .map { c ->
+                if (c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c == '.' || c == '_' || c == '-') c
+                else '-'
+            }
+            .joinToString("")
+            .replace(Regex("-{2,}"), "-")
+            .trim('.', '-', '_')
+            .take(32)
+        return cleaned.ifEmpty { distro.key }
+    }
+
+    /** 把 SAF Uri 整份复制到私有文件；读不到时抛明确错误，而不是建出空容器。 */
+    private suspend fun copyUriTo(source: Uri, target: File) {
+        val input = ctx.contentResolver.openInputStream(source)
+            ?: throw IllegalStateException("无法打开所选文件")
+        input.use { src ->
+            target.outputStream().use { out ->
+                val buf = ByteArray(256 * 1024)
+                while (true) {
+                    currentCoroutineContext().ensureActive()
+                    val n = src.read(buf)
+                    if (n <= 0) break
+                    out.write(buf, 0, n)
+                }
+            }
+        }
+        if (target.length() <= 0L) throw IllegalStateException("所选文件是空的")
+    }
+
+    /**
      * 写入一个 tar 条目。
      *
      * PROOT_LINK2SYMLINK 会把大文件搬进全局 l2s 并以绝对符号链接指回去，
      * 这样的备份无法自包含。遇到这种链接就沿链找到 l2s 里的真文件，按普通文件写入。
      */
-    private fun addFile(tar: TarArchiveOutputStream, file: File, name: String) {
+    private fun addFile(
+        tar: TarArchiveOutputStream,
+        file: File,
+        name: String,
+        hardLinkTo: String? = null
+    ) {
+        if (hardLinkTo != null) {
+            // 硬链接条目不带正文，只指向本包里第一份实体数据。
+            // 解包端会优先 Os.link，失败则退化成 guest 内绝对符号链接。
+            TarArchiveEntry(
+                name,
+                org.apache.commons.compress.archivers.tar.TarConstants.LF_LINK
+            ).apply {
+                linkName = hardLinkTo
+                mode = if (file.canExecute()) 0x1ED else 0x1A4
+            }.let {
+                tar.putArchiveEntry(it)
+                tar.closeArchiveEntry()
+            }
+            return
+        }
+
         val link = if (isSymlink(file)) {
             runCatching {
                 java.nio.file.Files.readSymbolicLink(file.toPath()).toString()
@@ -988,6 +1199,26 @@ class ContainerOps(private val ctx: Context) {
     }.getOrDefault(false)
 
     /**
+     * 返回该文件在本包里第一次出现时的条目路径；首次出现返回 null。
+     *
+     * 只有 `st_nlink > 1` 的普通文件才按硬链接处理：Android 的 `File` API 拿不到
+     * inode/link count，必须走 `Os.lstat`。同一份数据在 tar 里只写一次，解包端
+     * 重建硬链接（或 symlink 回退），恢复后的 `du` 才不会成倍放大。
+     */
+    private fun hardLinkOf(
+        file: File,
+        archivePath: String,
+        seen: MutableMap<String, String>
+    ): String? {
+        if (isSymlink(file)) return null
+        val st = runCatching { android.system.Os.lstat(file.absolutePath) }.getOrNull()
+            ?: return null
+        val kind = st.st_mode and android.system.OsConstants.S_IFMT
+        if (kind != android.system.OsConstants.S_IFREG || st.st_nlink <= 1) return null
+        return seen.putIfAbsent("${st.st_dev}:${st.st_ino}", archivePath)
+    }
+
+    /**
      * 有些发行版的 tarball 会把整棵 rootfs 套在一层目录里（Kali NetHunter full
      * 就是 `kali-arm64/`），直接解压会导致 guest 里根本没有 /bin/sh。检测到
      * 「rootfs 下只有一个目录，且它自己看起来就是个根」时，把这层搬平。
@@ -1027,6 +1258,83 @@ class ContainerOps(private val ctx: Context) {
             cur = if (link.isAbsolute) link.toFile() else File(cur.parentFile, link.toString())
         }
         return null
+    }
+
+    /** l2s 里的真实文件 → 相对 AppPaths.l2sDir 的路径，写进备份清单。 */
+    private fun l2sRelativePath(target: File): String {
+        val root = AppPaths.l2sDir(ctx).absolutePath.trimEnd('/') + "/"
+        return if (target.absolutePath.startsWith(root)) {
+            target.absolutePath.removePrefix(root)
+        } else {
+            target.absolutePath.trimStart('/')
+        }
+    }
+
+    /**
+     * 把备份里展开的 l2s 正文搬回 `l2s/<新 uuid>/...` 并重建符号链接。
+     *
+     * 恢复后的 rootfs 里这些路径重新变回链接，体积统计（`SysInfo.dirBytes` 跳过
+     * 符号链接）就与备份前一致；正文仍在全局 l2s 里，`delete` 会按 uuid 一起清掉。
+     * 清单缺失（v2 及更早的备份）时保持实体文件，不做任何破坏性操作。
+     */
+    private fun restoreL2s(
+        rootfs: File,
+        newUuid: String,
+        oldUuid: String,
+        entries: JSONObject?,
+        onProgress: (Progress) -> Unit
+    ) {
+        if (entries == null || entries.length() == 0) return
+        onProgress(Progress(Stage.RESTORE, 0, 1, "l2s"))
+        val l2sRoot = AppPaths.l2sDir(ctx).apply { mkdirs() }
+        val keys = entries.keys()
+        var moved = 0
+        while (keys.hasNext()) {
+            val archivePath = keys.next()
+            val l2sRel = entries.optString(archivePath)
+            val sub = archivePath.removePrefix("rootfs/").trimStart('/')
+            if (sub.isEmpty() || sub.split('/').any { it == ".." }) continue
+            val relParts = l2sRel.trimStart('/').split('/')
+                .filter { it.isNotEmpty() && it != "." && it != ".." }
+            if (relParts.isEmpty()) continue
+            // 去掉旧容器 uuid 这一层，避免 l2s/<新 uuid>/<旧 uuid>/...
+            val cleaned = if (oldUuid.isNotBlank() && relParts.first() == oldUuid) {
+                relParts.drop(1)
+            } else {
+                relParts
+            }
+            val relName = cleaned.joinToString("/").ifEmpty { File(sub).name }
+            val dest = File(File(l2sRoot, newUuid), relName)
+            val src = File(rootfs, sub)
+            // 硬链接回退出来的“符号链接”没有正文，不能把链接本身搬进 l2s。
+            if (!src.isFile || runCatching {
+                    java.nio.file.Files.isSymbolicLink(src.toPath())
+                }.getOrDefault(false)
+            ) {
+                continue
+            }
+            dest.parentFile?.mkdirs()
+            val ok = runCatching { src.renameTo(dest) }.getOrDefault(false) ||
+                runCatching {
+                    dest.outputStream().use { out ->
+                        src.inputStream().use { it.copyTo(out, 256 * 1024) }
+                    }
+                    src.delete()
+                    true
+                }.getOrDefault(false)
+            if (!ok || !dest.isFile) continue
+            runCatching { java.nio.file.Files.deleteIfExists(src.toPath()) }
+            val linked = runCatching {
+                java.nio.file.Files.createSymbolicLink(src.toPath(), dest.toPath())
+            }.isSuccess
+            if (!linked) {
+                // 极少数文件系统禁止建链：把正文搬回去，宁可体积大也不能丢文件。
+                runCatching { dest.renameTo(src) }
+                continue
+            }
+            moved++
+        }
+        Log.i(TAG, "restore l2s: $moved/${entries.length()} link(s) rebuilt for $newUuid")
     }
 
     private suspend fun copyTree(src: File, dst: File, onProgress: (Long, Long) -> Unit = { _, _ -> }) {

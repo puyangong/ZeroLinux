@@ -126,6 +126,22 @@ class ContainerListActivity : BaseActivity() {
                 var cloneConfirm by remember { mutableStateOf<Pair<ContainerConfig, String>?>(null) }
                 var cloneId by remember { mutableStateOf("") }
 
+                // 「从 .zlbak 恢复」：导出的备份包必须能从 App 内选回来。
+                // 之前只有 ContainerOps.restore 的实现，没有任何入口，用户只能把
+                // .zlbak 丢进「从本地导入 rootfs」，结果 rootfs 下多出一层目录。
+                val restoreLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                    ActivityResultContracts.OpenDocument()
+                ) { uri ->
+                    if (uri != null) {
+                        ContainerTasks.restore(ctx, uri)
+                        android.widget.Toast.makeText(
+                            ctx,
+                            ctx.getString(R.string.containers_restore_started),
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
                 fun switchTo(target: ContainerConfig) {
                     repo.setActive(target.uuid)
                     snapshot = repo.snapshot()
@@ -165,10 +181,21 @@ class ContainerListActivity : BaseActivity() {
                         onBack = { finish() },
                         backAtEnd = true,
                         leading = {
-                            IconButton(onClick = {
-                                startActivity(Intent(ctx, NewContainerActivity::class.java))
-                            }) {
-                                Text("+", fontSize = 28.sp, style = ZlMonoBody.copy(fontWeight = FontWeight.Bold), color = ZlAccent)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = {
+                                    startActivity(Intent(ctx, NewContainerActivity::class.java))
+                                }) {
+                                    Text("+", fontSize = 28.sp, style = ZlMonoBody.copy(fontWeight = FontWeight.Bold), color = ZlAccent)
+                                }
+                                // 导入是低频但危险的操作，用带文字的按钮，避免和「+」的
+                                // 图标按钮混在一起被误认成下载/刷新。
+                                TextButton(onClick = { restoreLauncher.launch(arrayOf("*/*")) }) {
+                                    Text(
+                                        text = stringResource(R.string.containers_import),
+                                        style = ZlMonoSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = ZlAccent
+                                    )
+                                }
                             }
                         }
                     )
@@ -199,6 +226,10 @@ class ContainerListActivity : BaseActivity() {
                                         startActivity(Intent(ctx, NewContainerActivity::class.java))
                                     }
                                 )
+                                Spacer(Modifier.height(8.dp))
+                                ZlGhostButton(
+                                    text = stringResource(R.string.containers_restore)
+                                ) { restoreLauncher.launch(arrayOf("*/*")) }
                             }
                         }
                     } else {

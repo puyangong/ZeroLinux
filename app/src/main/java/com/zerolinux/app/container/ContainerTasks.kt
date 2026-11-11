@@ -331,10 +331,15 @@ object ContainerTasks {
         archive: Uri,
         id: String?
     ) = enqueue(ctx, Kind.CREATE, id ?: distro.key) { ops, progress ->
-        val cfg = ops.createFromArchive(distro, archive, id, onProgress = progress)
+        val imported = ops.importArchive(distro, archive, id, progress)
         bumpRevision()
-        val done = ops.initialize(cfg.uuid, progress)
-        done.id
+        // 备份包已经包含完整的 initialized 状态，再跑一遍初始化会把镜像源、
+        // 已装好的工具链白白重配一次；只有普通 rootfs 才继续初始化。
+        if (imported.restored) {
+            imported.config.id
+        } else {
+            ops.initialize(imported.config.uuid, progress).id
+        }
     }
 
     /** 列表行/设置页直接传配置对象，省得调用方拆字段。 */

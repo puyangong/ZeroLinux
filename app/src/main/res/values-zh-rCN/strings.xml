@@ -81,6 +81,8 @@
     <string name="containers_new">新建容器</string>
     <string name="containers_data">备份</string>
     <string name="containers_restore">从 .zlbak 恢复</string>
+    <string name="containers_import">导入</string>
+    <string name="containers_restore_started">正在导入备份…</string>
     <string name="containers_delete_title">删除容器？</string>
     <string name="containers_delete_desc">%1$s 及其 rootfs 会被永久删除，正在进行的安装任务会被取消。</string>
     <string name="containers_clone_title">克隆容器</string>
@@ -125,7 +127,7 @@
     <string name="new_container_note_title">接下来会发生什么</string>
     <string name="new_container_note">rootfs 会下载到应用私有目录，随后 apt/apk 换到镜像源，并安装 curl、git、python、node、rust、go 等常用开发工具。</string>
     <string name="new_container_create">创建并安装</string>
-    <string name="new_container_import">从本地导入 rootfs…</string>
+    <string name="new_container_import">从本地导入 rootfs / 备份…</string>
 
     <string name="container_field_id">容器 ID</string>
     <string name="container_field_uuid">UUID</string>

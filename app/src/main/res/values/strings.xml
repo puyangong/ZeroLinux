@@ -81,6 +81,8 @@
     <string name="containers_new">New container</string>
     <string name="containers_data">Backup</string>
     <string name="containers_restore">Restore from .zlbak</string>
+    <string name="containers_import">Import</string>
+    <string name="containers_restore_started">Importing backup…</string>
     <string name="containers_delete_title">Delete container?</string>
     <string name="containers_delete_desc">%1$s and its rootfs will be removed permanently. Any running install will be canceled.</string>
     <string name="containers_clone_title">Clone container</string>
@@ -125,7 +127,7 @@
     <string name="new_container_note_title">What happens next</string>
     <string name="new_container_note">The rootfs downloads into the app private storage, then apt/apk is repointed to a mirror and curl, git, python, node, rust, go and other common development tools are installed.</string>
     <string name="new_container_create">Create and install</string>
-    <string name="new_container_import">Import local rootfs…</string>
+    <string name="new_container_import">Import local rootfs / .zlbak…</string>
 
     <string name="container_field_id">Container ID</string>
     <string name="container_field_uuid">UUID</string>
